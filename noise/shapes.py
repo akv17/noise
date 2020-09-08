@@ -1,8 +1,11 @@
+from abc import abstractmethod
+
 import numpy as np
 import pyqtgraph.opengl as gl
 from opensimplex import OpenSimplex
 
 from .utils import timer
+from .colors import TransparentPalette
 
 PERLIN_NOISE = OpenSimplex().noise2d
 
@@ -42,19 +45,12 @@ def make_faces(width, height):
     return np.asarray(fcs, dtype=np.int64)
 
 
-class Grid:
+class BaseShape:
 
-    def __init__(self, width, height, draw_edges=True):
+    def __init__(self, width, height, palette=None):
         self.width = width
         self.height = height
-
-        self.verts = make_verts(width=self.width, height=self.height)
-        self.faces = make_faces(width=self.width, height=self.height)
-        self.vert_colors = np.zeros((len(self.verts), 4), dtype=np.float64)
-
-        self._gl_mesh_item = gl.GLMeshItem(drawEdges=draw_edges)
-        self._gl_mesh_data = gl.MeshData(vertexes=self.verts, faces=self.faces, vertexColors=self.vert_colors)
-        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
+        self.palette = palette or TransparentPalette()
 
     @property
     def dims(self):
@@ -65,6 +61,39 @@ class Grid:
         return self.width * self.height
 
     @property
+    @abstractmethod
+    def gl_item(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _update_verts(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _update_colors(self):
+        raise NotImplementedError
+
+    @timer
+    def frame(self):
+        self._update_verts()
+        self._update_colors()
+
+
+class Grid(BaseShape):
+
+    def __init__(self, width, height, draw_edges=True, palette=None):
+        super().__init__(width=width, height=height, palette=palette)
+        self.draw_edges = draw_edges
+
+        self.verts = make_verts(width=self.width, height=self.height)
+        self.faces = make_faces(width=self.width, height=self.height)
+        self.vert_colors = np.zeros((len(self.verts), 4), dtype=np.float64)
+
+        self._gl_mesh_item = gl.GLMeshItem(drawEdges=draw_edges)
+        self._gl_mesh_data = gl.MeshData(vertexes=self.verts, faces=self.faces, vertexColors=self.vert_colors)
+        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
+
+    @property
     def n_faces(self):
         return (self.width - 1) * (self.height - 1) * 4
 
@@ -72,25 +101,20 @@ class Grid:
     def gl_item(self):
         return self._gl_mesh_item
 
-    def _update_z(self):
-        self.noise = np.roll(self.noise, 1)
-        self.verts[:, -1] = self.noise
-        self._gl_mesh_data.setVertexes(self.verts)
-        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
+    @abstractmethod
+    def _update_verts(self):
+        raise NotImplementedError
 
     def _update_colors(self):
-        pass
-
-    @timer
-    def frame(self):
-        self._update_z()
-        self._update_colors()
+        colors = self.palette.apply(self.verts)
+        self._gl_mesh_data.setVertexColors(colors)
+        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
 
 
 class PerlinGrid(Grid):
 
-    def __init__(self, width, height, draw_edges=True, speed=0.1, scale=0.2):
-        super().__init__(width=width, height=height, draw_edges=draw_edges)
+    def __init__(self, width, height, draw_edges=True, palette=None, speed=0.1, scale=0.2):
+        super().__init__(width=width, height=height, draw_edges=draw_edges, palette=palette)
         self.speed = speed
         self.scale = scale
         self._offset = 0
@@ -100,7 +124,7 @@ class PerlinGrid(Grid):
         z = PERLIN_NOISE(x * self.scale + self._offset, y * self.scale + self._offset)
         return [x, y, z]
 
-    def _update_z(self):
+    def _update_verts(self):
         self.verts = np.apply_along_axis(self._compute_vertex_noise, 1, self.verts)
         self._gl_mesh_data.setVertexes(self.verts)
         self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
