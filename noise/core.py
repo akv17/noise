@@ -32,12 +32,12 @@ class Scene:
         self.qt_app.exec_()
 
     def _set_shape(self, shape):
-        shape = shape.gl_item
+        item = shape.gl_item
         try:
-            self.win.removeItem(shape)
+            self.win.removeItem(item)
         except ValueError:
             pass
-        self.win.addItem(shape)
+        self.win.addItem(item)
 
     def _render_win(self):
         self.win.show()
