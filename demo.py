@@ -3,8 +3,9 @@ from noise.shapes import PerlinGrid
 from noise.colors import GradientPalette
 
 W, H = 1200, 600
-GW, GH = 40, 40
-scene = Scene(W, H)
-palette = GradientPalette(src=(19, 91, 117), dst=(25, 168, 128))
-grid = PerlinGrid(GW, GH, palette=palette, draw_edges=True)
-scene.animate(shape=grid)
+GW, GH = 100, 100
+scene = Scene(width=1200, height=600)
+palette = GradientPalette(src=(6, 44, 71), dst=(27, 86, 128))
+grid = PerlinGrid(width=100, height=100, palette=palette, draw_edges=True, speed=0.05)
+fb = scene.render(shape=grid, size=(1200, 600))
+fb.show()
