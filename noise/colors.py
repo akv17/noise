@@ -10,7 +10,7 @@ class BasePalette:
         raise NotImplementedError
 
 
-class TransparentPalette(BasePalette):
+class DummyPalette(BasePalette):
 
     def apply(self, verts):
         return np.zeros((len(verts), 4), dtype=np.float64)
