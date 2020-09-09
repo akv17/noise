@@ -3,7 +3,7 @@ from abc import abstractmethod
 import numpy as np
 from opensimplex import OpenSimplex
 
-PERLIN_NOISE = OpenSimplex().noise2d
+_PERLIN_NOISE = OpenSimplex().noise2d
 
 
 class BaseNoise:
@@ -28,7 +28,7 @@ class PerlinNoise(BaseNoise):
 
     def _compute_vertex(self, vertex):
         x, y, _ = vertex
-        z = PERLIN_NOISE(x * self.scale + self._offset, y * self.scale + self._offset)
+        z = _PERLIN_NOISE(x * self.scale + self._offset, y * self.scale + self._offset)
         return [x, y, z]
 
     def apply(self, verts):
