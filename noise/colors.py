@@ -3,6 +3,10 @@ from abc import abstractmethod
 import numpy as np
 
 
+class GRADIENTS:
+    WATER = ((6, 44, 71), (27, 86, 128))
+
+
 class BasePalette:
 
     @abstractmethod
