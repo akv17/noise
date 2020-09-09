@@ -43,7 +43,7 @@ def make_faces(width, height):
     return np.asarray(fcs, dtype=np.int64)
 
 
-class BaseShape:
+class BaseScene:
 
     def __init__(self, width, height, noise=None, palette=None):
         self.width = width
@@ -78,7 +78,7 @@ class BaseShape:
         self._update_colors()
 
 
-class Grid(BaseShape):
+class Grid(BaseScene):
 
     def __init__(self, width, height, draw_edges=True, noise=None, palette=None):
         super().__init__(width=width, height=height, noise=noise, palette=palette)

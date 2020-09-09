@@ -20,7 +20,7 @@ def _create_window(w, h, res_w=1920, res_h=1080, title=None, cam_dist=50, cam_el
     return win
 
 
-class FrameBuffer:
+class Film:
 
     def __init__(self, buf):
         self.buf = buf.copy()
@@ -52,7 +52,7 @@ class FrameBuffer:
         shutil.rmtree(dir_name, ignore_errors=True)
 
 
-class Scene:
+class View:
 
     def __init__(self, width, height, window_params=None):
         self.width = width
@@ -90,8 +90,8 @@ class Scene:
         shape.frame()
         arr = self._render_img(size=size, fmt=fmt).astype(np.uint8)
         buf = np.expand_dims(arr, 0)
-        fb = FrameBuffer(buf=buf)
-        return fb
+        film = Film(buf=buf)
+        return film
 
     def animate(self, shape, n_frames, size, fmt=GL_RGBA):
         buf = []
@@ -101,8 +101,8 @@ class Scene:
             arr = self._render_img(size=size, fmt=fmt)
             buf.append(arr)
         buf = np.asarray(buf)
-        fb = FrameBuffer(buf)
-        return fb
+        film = Film(buf)
+        return film
 
     def irender(self, shape):
         self._set_shape(shape)
