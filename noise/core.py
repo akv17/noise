@@ -1,3 +1,6 @@
+import os
+import shutil
+
 import imageio
 import numpy as np
 import pyqtgraph.opengl as gl
@@ -36,6 +39,17 @@ class FrameBuffer:
 
     def to_gif(self, fp, fps=30):
         imageio.mimwrite(fp, self.buf.copy(), fps=fps)
+
+    def dump(self, dir_name, fmt='jpg', mode='RGB'):
+        shutil.rmtree(dir_name, ignore_errors=True)
+        os.makedirs(dir_name, exist_ok=True)
+        max_i_len = len(str(len(self.buf)))
+        for i, frame in enumerate(self.buf):
+            fn = f'{"0" * (max_i_len - len(str(i)))}{i}.{fmt}'
+            fp = os.path.join(dir_name, fn)
+            img = self.to_pil(i=i, mode=mode)
+            img.save(fp)
+        shutil.rmtree(dir_name, ignore_errors=True)
 
 
 class Scene:
