@@ -2,12 +2,10 @@ from abc import abstractmethod
 
 import numpy as np
 import pyqtgraph.opengl as gl
-from opensimplex import OpenSimplex
 
 from .utils import timer
-from .colors import TransparentPalette
-
-PERLIN_NOISE = OpenSimplex().noise2d
+from .noises import DummyNoise
+from .colors import DummyPalette
 
 
 @timer
@@ -47,10 +45,11 @@ def make_faces(width, height):
 
 class BaseShape:
 
-    def __init__(self, width, height, palette=None):
+    def __init__(self, width, height, noise=None, palette=None):
         self.width = width
         self.height = height
-        self.palette = palette or TransparentPalette()
+        self.noise = noise or DummyNoise()
+        self.palette = palette or DummyPalette()
 
     @property
     def dims(self):
@@ -81,8 +80,8 @@ class BaseShape:
 
 class Grid(BaseShape):
 
-    def __init__(self, width, height, draw_edges=True, palette=None):
-        super().__init__(width=width, height=height, palette=palette)
+    def __init__(self, width, height, draw_edges=True, noise=None, palette=None):
+        super().__init__(width=width, height=height, noise=noise, palette=palette)
         self.draw_edges = draw_edges
 
         self.verts = make_verts(width=self.width, height=self.height)
@@ -103,29 +102,11 @@ class Grid(BaseShape):
 
     @abstractmethod
     def _update_verts(self):
-        raise NotImplementedError
+        self.verts = self.noise.apply(self.verts)
+        self._gl_mesh_data.setVertexes(self.verts)
+        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
 
     def _update_colors(self):
         colors = self.palette.apply(self.verts)
         self._gl_mesh_data.setVertexColors(colors)
         self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
-
-
-class PerlinGrid(Grid):
-
-    def __init__(self, width, height, draw_edges=True, palette=None, speed=0.1, scale=0.2):
-        super().__init__(width=width, height=height, draw_edges=draw_edges, palette=palette)
-        self.speed = speed
-        self.scale = scale
-        self._offset = 0
-
-    def _compute_vertex_noise(self, vertex):
-        x, y, _ = vertex
-        z = PERLIN_NOISE(x * self.scale + self._offset, y * self.scale + self._offset)
-        return [x, y, z]
-
-    def _update_verts(self):
-        self.verts = np.apply_along_axis(self._compute_vertex_noise, 1, self.verts)
-        self._gl_mesh_data.setVertexes(self.verts)
-        self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
-        self._offset -= self.speed
