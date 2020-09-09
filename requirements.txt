@@ -1,5 +1,7 @@
+imageio==2.9.0
 numpy==1.19.1
 opensimplex==0.3
+Pillow==7.2.0
 PyOpenGL==3.1.5
 PyOpenGL-accelerate==3.1.5
 PyQt5==5.15.0
