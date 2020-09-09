@@ -4,8 +4,8 @@ import numpy as np
 import pyqtgraph.opengl as gl
 
 from .utils import timer
-from .noises import DummyNoise
-from .colors import DummyPalette
+from .noises import DummyNoise, PerlinNoise
+from .colors import GRADIENTS, DummyPalette, GradientPalette
 
 
 @timer
@@ -100,7 +100,6 @@ class Grid(BaseScene):
     def gl_item(self):
         return self._gl_mesh_item
 
-    @abstractmethod
     def _update_verts(self):
         self.verts = self.noise.apply(self.verts)
         self._gl_mesh_data.setVertexes(self.verts)
@@ -110,3 +109,13 @@ class Grid(BaseScene):
         colors = self.palette.apply(self.verts)
         self._gl_mesh_data.setVertexColors(colors)
         self._gl_mesh_item.setMeshData(meshdata=self._gl_mesh_data)
+
+
+class Water(Grid):
+
+    def __init__(self, width, height, draw_edges=True, speed=0.05, scale=0.2):
+        super().__init__(width=width, height=height, draw_edges=draw_edges)
+        self.speed = speed
+        self.scale = scale
+        self.noise = PerlinNoise(speed=self.speed, scale=self.scale)
+        self.palette = GradientPalette(*GRADIENTS.WATER)
